@@ -70,5 +70,6 @@ app.get('/websites', cors(), async (req, res) => {
   }
 });
 
-app.use(cors());
-module.exports.handler = serverless(app);
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
