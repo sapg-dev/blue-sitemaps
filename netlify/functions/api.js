@@ -70,4 +70,5 @@ app.get('/websites', cors(), async (req, res) => {
   }
 });
 
+app.use(cors());
 module.exports.handler = serverless(app);
