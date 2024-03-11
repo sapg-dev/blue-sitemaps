@@ -1,97 +1,111 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import Checkbox from '@mui/material/Checkbox';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
 
-// Styles for the FilterComponent
-const filterListStyle = {
-  margin: '20px 0',
-  padding: '0',
-  listStyle: 'none',
-};
+const FilterComponent = ({ subFilters = [], onFilterSelect }) => {
+    const [selectedFilters, setSelectedFilters] = useState([]);
 
-const filterItemStyle = (isSelected) => ({
-  display: 'flex',
-  alignItems: 'center',
-  padding: '10px',
-  margin: '10px 0',
-  borderRadius: '5px',
-  cursor: 'pointer',
-  backgroundColor: isSelected ? '#f0f0f0' : 'transparent',
-  boxShadow: isSelected ? '0px 0px 8px rgba(0, 0, 0, 0.2)' : 'none',
-});
+    const subFilterIcons = {
+      'Power BI': '/icons/pb.svg',
+      'Snowflake': '/icons/sw.png',
+      'Dynamics 365': '/icons/d365.png',
+      'Dashboard': '/icons/d.png',
+      'DAX': '/icons/dax.svg',
+      'Power Query': '/icons/pq.png',
+      'Python': '/icons/python.svg',
+      'Pandas': '/icons/panda.svg',
 
-const filterIconStyle = {
-  marginRight: '10px',
-};
-
-const badgeStyle = {
-  marginLeft: 'auto',
-  padding: '5px 10px',
-  backgroundColor: '#e0e0e0',
-  borderRadius: '20px',
-  fontSize: '0.8em',
-};
-
-// Updated filters with keyword variations
-const filters = [{ name: 'All', keywords: [], icon: '' },
-{ name: 'PowerBI', keywords: ['power bi', 'powerbi', 'Power BI'], icon: '📘' },
-  { name: 'Fabric', keywords: ['Fabric', 'fabric'], icon: '📊' },
-  { name: 'Synapse', keywords: ['Synapse', 'synapse'], icon: '🌐' },
-  { name: 'D365', keywords: ['D365', 'd365'], icon: '⚡' },
-  { name: 'Dataverse', keywords: ['Dataverse', 'dataverse'], icon: '📘' },
-  { name: 'Python', keywords: ['Python', 'python'], icon: '📊' },
-  { name: 'Git', keywords: ['git', 'Git'], icon: '🌐' },
-  { name: 'Cloud', keywords: ['Cloud', 'cloud'], icon: '☁️' },
-  { name: 'Certification', keywords: ['Certification', 'certification'], icon: '⚡' },
-  { name: 'Big Query', keywords: ['big query', 'google', 'Big Query', 'Google', 'bigquery'], icon: '⚡' },
- 
-]; 
+      'Jupyter': '/icons/jupyter.svg',
+      'Polars': '/icons/polars.png',
+      'Azure Fabric': '/icons/fabric.svg',
+      'BigQuery': '/icons/bg.svg',
 
 
-const FilterComponent = ({ articles, onFilterSelect }) => {
-  const [selectedFilter, setSelectedFilter] = useState('All');
-  const [sortedFilters, setSortedFilters] = useState([]);
+      'Synapse': '/icons/synapse.svg',
+      'AWS': '/icons/aws.svg',
+      'Data Factory': '/icons/data.svg',
+      'Scikit-Learn': '/icons/sick.svg',
+      'R': '/icons/r.svg',
 
-  useEffect(() => {
-    const calculateFilterCount = filter => {
-      const articleMatchesKeywords = (article, keywords) => {
-        if (keywords.length === 0) return true;
-        return keywords.some(keyword => article.cured_name.toLowerCase().includes(keyword.toLowerCase()));
-      };
+      'AutoML': '/icons/auto.svg',
+      'Colab': '/icons/colab.svg',
+      'TensorFlow': '/icons/tensorf.svg',
+      'Keras': '/icons/keras.svg',
 
-      return articles.filter(article => articleMatchesKeywords(article, filter.keywords)).length;
+        // Add other subfsvlters and their corresponding icon paths here
     };
 
-    const filtersWithCount = filters.map(filter => ({
-      ...filter,
-      count: calculateFilterCount(filter)
-    }));
+    const handleToggle = (filterName) => () => {
+        const currentIndex = selectedFilters.indexOf(filterName);
+        const newChecked = [...selectedFilters];
 
-    const sorted = filtersWithCount
-      .filter(filter => filter.name !== 'All')
-      .sort((a, b) => b.count - a.count);
+        if (currentIndex === -1) {
+            newChecked.push(filterName);
+        } else {
+            newChecked.splice(currentIndex, 1);
+        }
 
-    setSortedFilters([filtersWithCount.find(filter => filter.name === 'All'), ...sorted]);
-  }, [articles]);
+        setSelectedFilters(newChecked);
+        onFilterSelect(newChecked);
+    };
 
-  const handleFilterClick = filterName => {
-    setSelectedFilter(filterName);
-    onFilterSelect(filters.find(f => f.name === filterName)?.keywords || []);
-  };
+    return (
+        <List component="nav" aria-label="filter list">
+            <ListItem
+                dense
+                button
+                onClick={() => {
+                    setSelectedFilters([]);
+                    onFilterSelect([]);
+                }}
+            >
+                <ListItemIcon>
+                    <span role="img" aria-label="All">🌐</span>
+                </ListItemIcon>
+                <ListItemText primary="All" />
+                <ListItemIcon>
+                    <Checkbox
+                        edge="start"
+                        checked={selectedFilters.length === 0}
+                        tabIndex={-1}
+                        disableRipple
+                        inputProps={{ 'aria-label': 'Select All' }}
+                        onClick={handleToggle('All')}
+                    />
+                </ListItemIcon>
+            </ListItem>
+            {subFilters.map(filter => {
+                const labelId = `checkbox-list-label-${filter}`;
+                const iconSrc = subFilterIcons[filter] ? subFilterIcons[filter] : '/icons/default-icon.png'; // Default icon if not specified
 
-  return (
-    <ul style={filterListStyle}>
-      {sortedFilters.map((filter, index) => (
-        <li
-          key={index}
-          style={filterItemStyle(filter.name === selectedFilter)}
-          onClick={() => handleFilterClick(filter.name)}
-        >
-          <span style={filterIconStyle}>{filter.icon}</span>
-          {filter.name}
-          <span style={badgeStyle}>{filter.count}</span>
-        </li>
-      ))}
-    </ul>
-  );
+                return (
+                    <ListItem
+                        key={filter}
+                        dense
+                        button
+                        onClick={handleToggle(filter)}
+                    >
+                        <ListItemIcon>
+                            <img src={iconSrc} alt={filter} width="24" height="24" /> {/* Display the icon */}
+                        </ListItemIcon>
+                        <ListItemText id={labelId} primary={filter} />
+                        <ListItemIcon>
+                            <Checkbox
+                                edge="end"
+                                checked={selectedFilters.includes(filter)}
+                                tabIndex={-1}
+                                disableRipple
+                                inputProps={{ 'aria-labelledby': labelId }}
+                            />
+                        </ListItemIcon>
+                    </ListItem>
+                );
+            })}
+        </List>
+    );
 };
 
 export default FilterComponent;

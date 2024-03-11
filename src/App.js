@@ -1,182 +1,238 @@
 import React, { useEffect, useState } from 'react';
-import Papa from 'papaparse';
 import LinkCard from './LinkCard';
 import Header from './header';
 import FilterComponent from './FilterComponent';
+import Pagination from '@mui/material/Pagination';
+import ResponsiveAppBar from './menu';
 
 const App = () => {
   const [articles, setArticles] = useState([]);
   const [displayedArticles, setDisplayedArticles] = useState([]);
   const [sortOrder, setSortOrder] = useState('desc');
-  const [currentFilterKeywords, setCurrentFilterKeywords] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedWebsites, setSelectedWebsites] = useState([]); // Changed to array
+  const [selectedWebsites, setSelectedWebsites] = useState([]);
   const [uniqueWebsites, setUniqueWebsites] = useState([]);
-  const [selectedTypes, setSelectedTypes] = useState([]); // Changed to array
-  const [uniqueTypes, setUniqueTypes] = useState([]);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [currentSubFilters, setCurrentSubFilters] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState([]);
+  const [currentCategory, setCurrentCategory] = useState('BI');
 
+  const categorySubFilters = {
+    Analytics: [
+      ['Python'], 
+      ['Pandas'], 
+      ['Jupyter'], 
+      ['Polars']
+    ],
+    BI: [
+      ['Power BI', 'powerbi', 'POWERBI', 'PowerBI', 'power bi'], 
+      ['Snowflake', 'snowflake'], 
+      ['Dynamics 365', 'D365'], 
+      ['Dashboard', 'dashboard'], 
+      ['DAX', 'dax'], 
+      ['Power Query', 'Power Query', 'PowerQuery', 'powerquery', 'power query']
+    ],
+    Cloud: [
+      ['Azure Fabric', 'AzureFabric'], 
+      ['BigQuery', 'Big Query'], 
+      ['Synapse'], 
+      ['AWS'], 
+      ['Data Factory']
+    ],
+    'Machine Learning': [
+      ['Scikit-Learn', 'Scikit Learn', 'ScikitLearn'], 
+      ['R', 'R Language', 'R Programming'], 
+      ['AutoML'], 
+      ['Colab'], 
+      ['TensorFlow'], 
+      ['Keras']
+    ],
+  };
 
-  const websiteDescription = 
-  [{ name: 'www.kevinrchant.com', description: 'Kevin Le King'},
-  { name: 'thomas-leblanc.com', description:  'Thomas Le bLANC' },
-  { name: 'www.oliviertravers.com', description: 'test'},
-  { name: 'data-mozart.com', description: 'test'},
-  { name: 'www.sqlbi.com', description: 'test'},
-  { name: 'en.brunner.bi', description: 'test'},
-  { name: 'pragmaticworks.com', description: 'test' },
-  { name: 'data-marc.com', description: 'test' },
-  { name: 'www.data-travelling.com', description: 'test' },
-  { name: 'datasavyy.com', description: 'test'},
-  { name: 'www.thatbluecloud.com', description: 'test'},
-  { name: 'GuyInACube', description: 'test'},
-  { name: 'HowToPowerBI', description: 'test' },
-  { name: 'ClubPowerBI', description: 'test'},
- 
-]; 
   useEffect(() => {
-    const fetchCSV = async () => {
-      try {
-        const response = await fetch('/sitemap.csv');
-        const reader = response.body.getReader();
-        let receivedLength = 0;
-        let chunks = [];
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) {
-            break;
-          }
-          chunks.push(value);
-          receivedLength += value.length;
-        }
-        const chunksAll = new Uint8Array(receivedLength);
-        let position = 0;
-        for (let chunk of chunks) {
-          chunksAll.set(chunk, position);
-          position += chunk.length;
-        }
-        const resultString = new TextDecoder("utf-8").decode(chunksAll);
-        Papa.parse(resultString, {
-
-          encoding: 'utf-8',
-          header: true,
-          complete: (results) => {
-            const articlesWithDates = results.data.map(article => ({
-              ...article,
-              date: new Date(article.lastmod || ''),
-              cured_name: article.cured_name || 'No Title',
-              website: article.website || 'No Website'
-            }));
-            setArticles(articlesWithDates);
-            const websites = [...new Set(articlesWithDates.map(article => article.website))].filter(Boolean);
-            setUniqueWebsites(websites);
-
-            const types = [...new Set(articlesWithDates.map(article => article.type))].filter(Boolean);
-            setUniqueTypes(types.map(type => ({ value: type, label: type })));
-          }
-        });
-      } catch (error) {
-        console.error('Error fetching or parsing CSV:', error);
-      }
-    };
-    fetchCSV();
+    fetchData();
   }, []);
 
 
-  const capitalizeFirstLetter = (string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+
+  
+
+const keywordVariationsMap = {};
+Object.entries(categorySubFilters).forEach(([category, subFilters]) => {
+  subFilters.forEach(subFilterArray => {
+    keywordVariationsMap[subFilterArray[0]] = subFilterArray;
+  });
+});
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/articles');
+      const data = await response.json();
+      setArticles(data);
+      setUniqueWebsites([...new Set(data.map(article => article.website))].filter(Boolean));
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+    }
   };
 
+  const onCategoryChange = async (category) => {
+    setCurrentCategory(category);
+    setSelectedFilters([]);
+    setSelectedWebsites([]);
+
+    const websitesResponse = await fetch(`http://localhost:5000/websites?field=${encodeURIComponent(category)}`);
+    const websitesData = await websitesResponse.json();
+    setUniqueWebsites(websitesData);
+
+    const newSubFilters = categorySubFilters[category] || [];
+    setCurrentSubFilters(newSubFilters);
+
+    fetchArticlesConsideringAllFilters(category);
+  };
+  const handleFilterSelection = (selectedPrimaryKeywords) => {
+    // Map the primary keywords to all their variations
+    const allVariations = selectedPrimaryKeywords.flatMap(keyword => keywordVariationsMap[keyword] || []);
+    setSelectedFilters(allVariations);
+    fetchArticlesConsideringAllFilters(currentCategory, allVariations);
+  };
+  const handleWebsiteSelect = (websites) => {
+    setSelectedWebsites(websites);
+    console.log('Selected Websites:', websites); // Log the selected websites
+    fetchArticlesConsideringAllFilters(currentCategory, selectedFilters, websites);
+};
+  
+const fetchArticlesConsideringAllFilters = async (category, subFilters = selectedFilters, websites = selectedWebsites) => {
+  const queryParameters = new URLSearchParams();
+  
+  if (category || currentCategory) {
+    queryParameters.append('field', category || currentCategory);
+  }
+
+  // Flatten the subfilter array and add each keyword as a separate query parameter
+  subFilters.flatMap(sf => sf).forEach(keyword => {
+    queryParameters.append('curedKeyword', keyword);
+  });
+  
+  if (websites && websites.length > 0) {
+    queryParameters.append('website', websites.join(','));
+  }
+
+  if (searchQuery) {
+    queryParameters.append('curedName', searchQuery);
+  }
+  
+  try {
+    const response = await fetch(`http://localhost:5000/articles?${queryParameters.toString()}`);
+    const data = await response.json();
+    setArticles(data);
+    setCurrentPage(1);
+  } catch (error) {
+    console.error('Error fetching articles:', error);
+  }
+};
+
+  
 
   useEffect(() => {
-    const filteredArticles = articles.filter(article => {
-      const articleLower = article.cured_name.toLowerCase();
-      const matchesKeywords = currentFilterKeywords.length === 0 || currentFilterKeywords.some(keyword => articleLower.includes(keyword.toLowerCase()));
-      const matchesSearchQuery = !searchQuery || articleLower.includes(searchQuery.toLowerCase());
-      const matchesWebsites = selectedWebsites.length === 0 || selectedWebsites.includes(article.website);
-      const matchesTypes = selectedTypes.length === 0 || selectedTypes.includes(article.type);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    setDisplayedArticles(articles.slice(indexOfFirstItem, indexOfLastItem));
+  }, [currentPage, itemsPerPage, articles]);
 
-      return matchesKeywords && matchesSearchQuery && matchesWebsites && matchesTypes;
-    }).sort((a, b) => sortOrder === 'asc' ? a.date - b.date : b.date - a.date);
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
 
-    setDisplayedArticles(filteredArticles);
-  }, [sortOrder, articles, currentFilterKeywords, searchQuery, selectedWebsites, selectedTypes]);
-
-  const handleFilterSelection = (keywords) => {
-    setCurrentFilterKeywords(keywords);
+  const handleItemsPerPageChange = (event) => {
+    setItemsPerPage(parseInt(event.target.value, 10));
+    setCurrentPage(1);
   };
 
   const handleSearch = (query) => {
     setSearchQuery(query);
   };
 
-  const handleWebsiteSelect = (websites) => {
-    setSelectedWebsites(websites.map(website => website.value));
+
+
+  const fetchArticlesBySearchQuery = async () => {
+    if (!searchQuery) return; // Don't fetch if the search query is empty
+
+    const queryParameters = new URLSearchParams({
+      field: currentCategory,
+      curedName: searchQuery
+    });
+
+    if (selectedFilters.length > 0) {
+      queryParameters.append('subFilters', selectedFilters.join(','));
+    }
+
+    if (selectedWebsites.length > 0) {
+      queryParameters.append('websites', selectedWebsites.join(','));
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/articles?${queryParameters.toString()}`);
+      const data = await response.json();
+      setArticles(data);
+      setCurrentPage(1);
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+    }
   };
 
-
-  /*function important */
-  
-  function decodeHtml(html) {
-    var textArea = document.createElement("textarea");
-    textArea.innerHTML = html;
-    return textArea.value;
-  }
-  
-
-  const handleTypeSelect = (types) => {
-    setSelectedTypes(types.map(type => type.value));
-  };
+  // UseEffect hook to fetch articles whenever searchQuery changes
+  useEffect(() => {
+    fetchArticlesBySearchQuery();
+  }, [searchQuery]);
 
   const containerStyle = {
     flex: 1,
     display: 'flex',
     flexWrap: 'wrap',
     gap: '20px',
-    justifyContent: displayedArticles.length === 1 ? 'flex-start' : 'space-between',
+    justifyContent: 'space-between',
     alignContent: 'flex-start',
-    // Add other necessary styles
   };
+  const primaryKeywords = currentSubFilters.map(subFilterGroup => subFilterGroup[0]);
 
 
-  const getWebsiteDescription = (websiteName) => {
-    const matchingWebsite = websiteDescription.find(w => w.name === websiteName);
-    return matchingWebsite ? matchingWebsite.description : 'No Description';
+  const paginationContainerStyle = {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '20px',
   };
-  
+
   return (
     <>
-      <Header 
-     
-        onSearch={handleSearch} 
-        websites={uniqueWebsites} 
-        onWebsiteSelect={handleWebsiteSelect}
-        articleTypes={uniqueTypes}
-        onTypeSelect={handleTypeSelect}
-      />
+      <ResponsiveAppBar onCategoryChange={onCategoryChange} />
+      <Header onSearch={handleSearch} websites={uniqueWebsites} onWebsiteSelect={handleWebsiteSelect} />
       <div style={{ display: 'flex' }}>
         <div style={{ width: '20%', minWidth: '200px' }}>
-          <FilterComponent articles={articles} onFilterSelect={handleFilterSelection} />
-          <div style={{ padding: '0 20px' }}>
-            <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
-              <option value="desc">Newest First</option>
-              <option value="asc">Oldest First</option>
-            </select>
-          </div>
+          <FilterComponent subFilters={primaryKeywords} onFilterSelect={handleFilterSelection} />
         </div>
         <div style={containerStyle}>
-        {displayedArticles.map((article, index) => (
-          <LinkCard 
-            key={index}
-            title={decodeHtml(capitalizeFirstLetter(article.cured_name))} //actually displays weird caracters, and capitalizes the first letter
-            content={article.lastmod ? new Date(article.lastmod).toLocaleDateString() : 'No Date'}
-            link={article.loc}
-            website={article.website}
-            date={article.date}
-            type={article.type}
-            description={getWebsiteDescription(article.website)} // Add this line to pass the type
-          />
-))}
+          {displayedArticles.map((article, index) => (
+            <LinkCard
+              key={index}
+              title={article.cured_name || 'No Title'}
+              content={article.lastmod ? new Date(article.lastmod).toLocaleDateString() : 'No Date'}
+              link={article.loc}
+              website={article.website}
+              date={new Date(article.lastmod)}
+            />
+          ))}
         </div>
+      </div>
+      <div style={paginationContainerStyle}>
+        <Pagination
+          count={Math.ceil(articles.length / itemsPerPage)}
+          page={currentPage}
+          onChange={handlePageChange}
+          color="primary"
+          showFirstButton
+          showLastButton
+        />
       </div>
     </>
   );
