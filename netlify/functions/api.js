@@ -1,4 +1,5 @@
 require('dotenv').config();
+const serverless = require('serverless-http');
 const express = require('express');
 const cors = require('cors');
 const { MongoClient } = require('mongodb');
@@ -69,6 +70,4 @@ app.get('/websites', cors(), async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+module.exports.handler = serverless(app);
