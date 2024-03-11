@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback  } from 'react';
 import LinkCard from './LinkCard';
 import Header from './header';
 import FilterComponent from './FilterComponent';
@@ -8,11 +8,10 @@ import ResponsiveAppBar from './menu';
 const App = () => {
   const [articles, setArticles] = useState([]);
   const [displayedArticles, setDisplayedArticles] = useState([]);
-  const [sortOrder, setSortOrder] = useState('desc');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedWebsites, setSelectedWebsites] = useState([]);
   const [uniqueWebsites, setUniqueWebsites] = useState([]);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [currentSubFilters, setCurrentSubFilters] = useState([]);
   const [selectedFilters, setSelectedFilters] = useState([]);
@@ -144,10 +143,7 @@ const fetchArticlesConsideringAllFilters = async (category, subFilters = selecte
     setCurrentPage(value);
   };
 
-  const handleItemsPerPageChange = (event) => {
-    setItemsPerPage(parseInt(event.target.value, 10));
-    setCurrentPage(1);
-  };
+
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -155,22 +151,22 @@ const fetchArticlesConsideringAllFilters = async (category, subFilters = selecte
 
 
 
-  const fetchArticlesBySearchQuery = async () => {
+  const fetchArticlesBySearchQuery = useCallback(async () => {
     if (!searchQuery) return; // Don't fetch if the search query is empty
-
+  
     const queryParameters = new URLSearchParams({
       field: currentCategory,
       curedName: searchQuery
     });
-
+  
     if (selectedFilters.length > 0) {
       queryParameters.append('subFilters', selectedFilters.join(','));
     }
-
+  
     if (selectedWebsites.length > 0) {
       queryParameters.append('websites', selectedWebsites.join(','));
     }
-
+  
     try {
       const response = await fetch(`http://localhost:5000/articles?${queryParameters.toString()}`);
       const data = await response.json();
@@ -179,13 +175,14 @@ const fetchArticlesConsideringAllFilters = async (category, subFilters = selecte
     } catch (error) {
       console.error('Error fetching articles:', error);
     }
-  };
+  }, [currentCategory, selectedFilters, selectedWebsites, searchQuery]); // Dependencies array added here
+  
 
   // UseEffect hook to fetch articles whenever searchQuery changes
   useEffect(() => {
     fetchArticlesBySearchQuery();
-  }, [searchQuery]);
-
+  }, [fetchArticlesBySearchQuery]); // Include the function as a dependency
+  
   const containerStyle = {
     flex: 1,
     display: 'flex',
