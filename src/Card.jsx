@@ -26,7 +26,7 @@ const LinkCard = ({ title, content, link, website, date, type, id, daysAgo, stat
       e.stopPropagation();
       handleMenuClose();
       try {
-        const response = await axios.patch(`http://https://dynamic-llama-c5f80f.netlify.app/update-article/${articleId}`, { newState: actionType });
+        const response = await axios.patch(`https://dynamic-llama-c5f80f.netlify.app/update-article/${articleId}`, { newState: actionType });
         console.log(response.data);
       } catch (error) {
         console.error('Error updating article state:', error);
