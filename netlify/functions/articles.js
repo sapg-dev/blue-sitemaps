@@ -8,7 +8,7 @@ exports.handler = async (event, context) => {
   try {
     const client = new MongoClient(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
     await client.connect();
-    const collection = client.db("blue-sitemaps").collection("datta");
+    const collection = client.db("blue-sitemaps").collection("data");
 
     const params = event.queryStringParameters;
     let query = {};
