@@ -20,7 +20,7 @@ const App = () => {
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [currentCategory, setCurrentCategory] = useState('BI');
   const [sortOrder, setSortOrder] = useState('Newsest'); // New state for sort order
-  const [articleStateFilter, setArticleStateFilter] = useState('');
+  const [, setArticleStateFilter] = useState('');
   const [selectedState, setSelectedState] = useState('');
 
 

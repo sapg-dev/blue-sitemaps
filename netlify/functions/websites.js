@@ -23,7 +23,8 @@ exports.handler = async (event, context) => {
       statusCode: 200,
       body: JSON.stringify(websites),
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
       }
     };
   } catch (error) {
