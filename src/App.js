@@ -88,7 +88,7 @@ Object.entries(categorySubFilters).forEach(([category, subFilters]) => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('http://localhost:5000/articles');
+      const response = await fetch('https://dynamic-llama-c5f80f.netlify.app/.netlify/functions/articles');
       const data = await response.json();
       setArticles(data);
       setUniqueWebsites([...new Set(data.map(article => article.website))].filter(Boolean));
@@ -119,7 +119,8 @@ Object.entries(categorySubFilters).forEach(([category, subFilters]) => {
       setSelectedFilters([]);
       setSelectedWebsites([]);
   
-      const websitesResponse = await fetch(`http://localhost:5000/websites?field=${encodeURIComponent(category)}`);
+      const websitesResponse = await fetch(`https://dynamic-llama-c5f80f.netlify.app/.netlify/functions/websites?field=${encodeURIComponent(category)}`);
+
       const websitesData = await websitesResponse.json();
       setUniqueWebsites(websitesData);
   
@@ -145,7 +146,7 @@ Object.entries(categorySubFilters).forEach(([category, subFilters]) => {
 };
 const fetchAllArticlesWithState = async (state) => {
   try {
-    const response = await fetch(`http://localhost:5000/articles?state=${state}`);
+    const response = await fetch(`https://dynamic-llama-c5f80f.netlify.app/.netlify/functions/articles?state=${encodeURIComponent(state)}`);
     const data = await response.json();
     setArticles(data);
     setCurrentPage(1);
@@ -156,7 +157,8 @@ const fetchAllArticlesWithState = async (state) => {
 
 const fetchAllArticles = async () => {
   try {
-    const response = await fetch('http://localhost:5000/articles');
+    const response = await fetch('https://dynamic-llama-c5f80f.netlify.app/.netlify/functions/articles');
+
     const data = await response.json();
     setArticles(data);
     setCurrentPage(1);
@@ -193,7 +195,7 @@ const fetchArticlesConsideringAllFilters = async (category, subFilters = selecte
   }
 
   try {
-    const response = await fetch(`http://localhost:5000/articles?${queryParameters.toString()}`);
+    const response = await fetch(`https://dynamic-llama-c5f80f.netlify.app/.netlify/functions/articles?${queryParameters.toString()}`);
     const data = await response.json();
     setArticles(data);
     setCurrentPage(1);
@@ -248,7 +250,8 @@ const sortedArticles = displayedArticles.sort((a, b) => {
     }
   
     try {
-      const response = await fetch(`http://localhost:5000/articles?${queryParameters.toString()}`);
+      const response = await fetch(`https://dynamic-llama-c5f80f.netlify.app/.netlify/functions/articles?${queryParameters.toString()}`);
+
       const data = await response.json();
       setArticles(data);
       setCurrentPage(1);

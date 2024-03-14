@@ -2,7 +2,7 @@ const { MongoClient } = require('mongodb');
 
 exports.handler = async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
-  const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/";
+  const MONGO_URI = process.env.MONGO_URI;
 
   try {
     const client = new MongoClient(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
