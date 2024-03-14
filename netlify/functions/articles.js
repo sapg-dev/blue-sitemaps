@@ -43,7 +43,7 @@ exports.handler = async (event, context) => {
       body: JSON.stringify(articles),
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://dynamic-llama-c5f80f.netlify.app'
+        'Access-Control-Allow-Origin': '*'
       }
     };
 } catch (error) {
@@ -51,7 +51,7 @@ exports.handler = async (event, context) => {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://dynamic-llama-c5f80f.netlify.app'
+        'Access-Control-Allow-Origin': '*'
       },
       body: JSON.stringify({ error: error.message })
     };
