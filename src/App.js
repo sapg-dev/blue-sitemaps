@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useCallback  } from 'react';
-import LinkCard from './LinkCard';
+import LinkCard from './Card';
 import Header from './header';
 import FilterComponent from './FilterComponent';
 import Pagination from '@mui/material/Pagination';
 import ResponsiveAppBar from './menu';
+import Grid from '@mui/material/Grid'; // Import Grid
+import IconButton from '@mui/material/IconButton';
+import SortIcon from '@mui/icons-material/Sort';
 
 const App = () => {
   const [articles, setArticles] = useState([]);
@@ -11,11 +14,15 @@ const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedWebsites, setSelectedWebsites] = useState([]);
   const [uniqueWebsites, setUniqueWebsites] = useState([]);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [currentSubFilters, setCurrentSubFilters] = useState([]);
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [currentCategory, setCurrentCategory] = useState('BI');
+  const [sortOrder, setSortOrder] = useState('Newsest'); // New state for sort order
+  const [articleStateFilter, setArticleStateFilter] = useState('');
+  const [selectedState, setSelectedState] = useState('');
+
 
   const categorySubFilters = {
     Analytics: [
@@ -53,7 +60,22 @@ const App = () => {
     fetchData();
   }, []);
 
+  const toggleSortOrder = () => {
+    const newOrder = sortOrder === 'newest' ? 'oldest' : 'newest';
+    setSortOrder(newOrder);
 
+    setDisplayedArticles(prevDisplayedArticles => {
+      const sortedArticles = [...prevDisplayedArticles];
+      sortedArticles.sort((a, b) => {
+        if (newOrder === 'newest') {
+          return a.daysAgo - b.daysAgo;
+        } else {
+          return b.daysAgo - a.daysAgo;
+        }
+      });
+      return sortedArticles;
+    });
+  };
 
   
 
@@ -75,20 +97,41 @@ Object.entries(categorySubFilters).forEach(([category, subFilters]) => {
     }
   };
 
+  const handleStateFilterChange = (state) => {
+    setArticleStateFilter(state);
+  
+    if (currentCategory === 'All Articles') {
+      fetchAllArticlesWithState(state);
+    } else {
+      fetchArticlesConsideringAllFilters(currentCategory, selectedFilters, selectedWebsites, state);
+    }
+  };
+
   const onCategoryChange = async (category) => {
     setCurrentCategory(category);
-    setSelectedFilters([]);
-    setSelectedWebsites([]);
-
-    const websitesResponse = await fetch(`http://localhost:5000/websites?field=${encodeURIComponent(category)}`);
-    const websitesData = await websitesResponse.json();
-    setUniqueWebsites(websitesData);
-
-    const newSubFilters = categorySubFilters[category] || [];
-    setCurrentSubFilters(newSubFilters);
-
-    fetchArticlesConsideringAllFilters(category);
+    setSelectedState(''); // Reset the selected state
+  
+    if (category === 'All Articles') {
+      setCurrentSubFilters([]);
+      setArticleStateFilter('');
+      fetchAllArticles();
+    } else {
+      setSelectedFilters([]);
+      setSelectedWebsites([]);
+  
+      const websitesResponse = await fetch(`http://localhost:5000/websites?field=${encodeURIComponent(category)}`);
+      const websitesData = await websitesResponse.json();
+      setUniqueWebsites(websitesData);
+  
+      const newSubFilters = categorySubFilters[category] || [];
+      setCurrentSubFilters(newSubFilters);
+  
+      fetchArticlesConsideringAllFilters(category);
+    }
   };
+  
+  
+  
   const handleFilterSelection = (selectedPrimaryKeywords) => {
     // Map the primary keywords to all their variations
     const allVariations = selectedPrimaryKeywords.flatMap(keyword => keywordVariationsMap[keyword] || []);
@@ -100,18 +143,41 @@ Object.entries(categorySubFilters).forEach(([category, subFilters]) => {
     console.log('Selected Websites:', websites); // Log the selected websites
     fetchArticlesConsideringAllFilters(currentCategory, selectedFilters, websites);
 };
-  
-const fetchArticlesConsideringAllFilters = async (category, subFilters = selectedFilters, websites = selectedWebsites) => {
+const fetchAllArticlesWithState = async (state) => {
+  try {
+    const response = await fetch(`http://localhost:5000/articles?state=${state}`);
+    const data = await response.json();
+    setArticles(data);
+    setCurrentPage(1);
+  } catch (error) {
+    console.error('Error fetching all articles with state:', error);
+  }
+};
+
+const fetchAllArticles = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/articles');
+    const data = await response.json();
+    setArticles(data);
+    setCurrentPage(1);
+  } catch (error) {
+    console.error('Error fetching all articles:', error);
+  }
+};
+const fetchArticlesConsideringAllFilters = async (category, subFilters = selectedFilters, websites = selectedWebsites, stateFilter = '') => {
   const queryParameters = new URLSearchParams();
   
-  if (category || currentCategory) {
-    queryParameters.append('field', category || currentCategory);
+  // Include category only if it's not 'All Articles'
+  if (category && category !== 'All Articles') {
+    queryParameters.append('field', category);
   }
 
-  // Flatten the subfilter array and add each keyword as a separate query parameter
-  subFilters.flatMap(sf => sf).forEach(keyword => {
-    queryParameters.append('curedKeyword', keyword);
-  });
+  // Include keyword variations only if it's not 'All Articles'
+  if (category !== 'All Articles') {
+    subFilters.flatMap(sf => sf).forEach(keyword => {
+      queryParameters.append('curedKeyword', keyword);
+    });
+  }
   
   if (websites && websites.length > 0) {
     queryParameters.append('website', websites.join(','));
@@ -120,7 +186,12 @@ const fetchArticlesConsideringAllFilters = async (category, subFilters = selecte
   if (searchQuery) {
     queryParameters.append('curedName', searchQuery);
   }
-  
+
+  // Add state filter to the query parameters if provided
+  if (stateFilter) {
+    queryParameters.append('state', stateFilter);
+  }
+
   try {
     const response = await fetch(`http://localhost:5000/articles?${queryParameters.toString()}`);
     const data = await response.json();
@@ -130,6 +201,15 @@ const fetchArticlesConsideringAllFilters = async (category, subFilters = selecte
     console.error('Error fetching articles:', error);
   }
 };
+
+
+
+
+const sortedArticles = displayedArticles.sort((a, b) => {
+  const dateA = new Date(a.lastmod);
+  const dateB = new Date(b.lastmod);
+  return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+});
 
   
 
@@ -182,15 +262,7 @@ const fetchArticlesConsideringAllFilters = async (category, subFilters = selecte
   useEffect(() => {
     fetchArticlesBySearchQuery();
   }, [fetchArticlesBySearchQuery]); // Include the function as a dependency
-  
-  const containerStyle = {
-    flex: 1,
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '20px',
-    justifyContent: 'space-between',
-    alignContent: 'flex-start',
-  };
+
   const primaryKeywords = currentSubFilters.map(subFilterGroup => subFilterGroup[0]);
 
 
@@ -203,23 +275,42 @@ const fetchArticlesConsideringAllFilters = async (category, subFilters = selecte
   return (
     <>
       <ResponsiveAppBar onCategoryChange={onCategoryChange} />
-      <Header onSearch={handleSearch} websites={uniqueWebsites} onWebsiteSelect={handleWebsiteSelect} />
+
+      <Header
+        onSearch={handleSearch}
+        websites={uniqueWebsites}
+        onWebsiteSelect={handleWebsiteSelect}
+        onStateFilterChange={handleStateFilterChange}
+        onCategoryChange={onCategoryChange}
+        selectedState={selectedState}
+        setSelectedState={setSelectedState}
+        setArticleStateFilter={setArticleStateFilter}
+      />
+      <IconButton variant="contained" onClick={toggleSortOrder} aria-label="sort">
+        <SortIcon />
+        {sortOrder === 'newest' ? 'Newest' : 'Oldest'}
+      </IconButton>
+
       <div style={{ display: 'flex' }}>
         <div style={{ width: '20%', minWidth: '200px' }}>
           <FilterComponent subFilters={primaryKeywords} onFilterSelect={handleFilterSelection} />
         </div>
-        <div style={containerStyle}>
-          {displayedArticles.map((article, index) => (
-            <LinkCard
-              key={index}
-              title={article.cured_name || 'No Title'}
-              content={article.lastmod ? new Date(article.lastmod).toLocaleDateString() : 'No Date'}
-              link={article.loc}
-              website={article.website}
-              date={new Date(article.lastmod)}
-            />
+        <Grid container spacing={2} style={{ flex: 1, padding: 20 }}>
+          {sortedArticles.map((article, index) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+              <LinkCard
+                title={article.cured_name || 'No Title'}
+                content={article.lastmod ? new Date(article.lastmod).toLocaleDateString() : 'No Date'}
+                link={article.loc}
+                website={article.website}
+                date={new Date(article.lastmod)}
+                daysAgo={article.daysAgo}
+                id={article._id}
+                state={article.state}
+              />
+            </Grid>
           ))}
-        </div>
+        </Grid>
       </div>
       <div style={paginationContainerStyle}>
         <Pagination

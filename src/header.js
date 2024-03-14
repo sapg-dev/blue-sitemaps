@@ -1,5 +1,7 @@
-import React from 'react';
-import { TextField, FormControl, InputLabel, Select, MenuItem, Chip } from '@mui/material';
+import React, { useState } from 'react';
+import { TextField, FormControl, InputLabel, Select, MenuItem, Chip, Button } from '@mui/material';
+import CategoryButtons from './Buttons';
+
 import image from './banner.png';
 
 const headerStyle = {
@@ -37,35 +39,38 @@ const selectStyle = {
   borderRadius: '4px',
 };
 
-const Header = ({ appName, onSearch, websites, onWebsiteSelect, articleTypes, onTypeSelect, currentSortOrder, onSortChange }) => {
-  // Ensure that websites and articleTypes props are arrays
-  const websiteOptions = Array.isArray(websites) ? websites.map(site => ({ value: site, label: site })) : [];
-  const articleTypeOptions = Array.isArray(articleTypes) ? articleTypes.map(type => ({ value: type, label: type })) : [];
 
-  const [selectedWebsites, setSelectedWebsites] = React.useState([]);
-  const [selectedTypes, setSelectedTypes] = React.useState([]);
 
-  const handleWebsiteChange = (event) => {
-    const newSelectedWebsites = event.target.value; // This should be an array of selected values
-    setSelectedWebsites(newSelectedWebsites);
-    
-    onWebsiteSelect(newSelectedWebsites); // Directly pass the array of selected values
-  };
+const Header = ({ appName, onSearch, websites, onWebsiteSelect, articleTypes, onTypeSelect, onStateFilterChange, onCategoryChange }) => {
+ 
+
+ 
   
-  const handleTypeChange = (event) => {
-    const newSelectedTypes = event.target.value; // This should be an array of selected values
-    setSelectedTypes(newSelectedTypes);
-    onTypeSelect(newSelectedTypes); // Directly pass the array of selected values
+  const [selectedWebsites, setSelectedWebsites] = React.useState([]);
+
+  const [selectedState, setSelectedState] = useState('');
+
+  const handleStateButtonClick = (state) => {
+    setSelectedState(state);
+    onStateFilterChange(state);
+  };
+  const handleWebsiteChange = (event) => {
+    const newSelectedWebsites = event.target.value;
+    setSelectedWebsites(newSelectedWebsites);
+    onWebsiteSelect(newSelectedWebsites);
   };
 
-  // Simplify the renderValue for clarity
-  const renderChips = (selected) => selected.map((value) => (
-    <Chip key={value} label={value} />
-  ));
+
+  
+
+
+
+  const renderChips = (selected) => selected.map((value) => <Chip key={value} label={value} />);
 
   return (
     <header style={headerStyle}>
       {appName}
+      <CategoryButtons onCategorySelect={onCategoryChange} />
       <div style={searchContainerStyle}>
         <TextField 
           fullWidth
@@ -84,31 +89,25 @@ const Header = ({ appName, onSearch, websites, onWebsiteSelect, articleTypes, on
             onChange={handleWebsiteChange}
             renderValue={renderChips}
           >
-            {websiteOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
+            {websites.map((website) => (
+              <MenuItem key={website} value={website}>
+                {website}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
-        <FormControl fullWidth style={selectStyle} sx={{ mb: 4, maxWidth: 400 }}>
-          <InputLabel id="types-label">Article Types</InputLabel>
-          <Select
-            labelId="types-label"
-            multiple
-            value={selectedTypes}
-            onChange={handleTypeChange}
-            renderValue={renderChips}
-          >
-            {articleTypeOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-       
+        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+          {['Urgent', 'Reading List', 'Archive', 'Toolbox'].map((state) => (
+            <Button
+              key={state}
+              onClick={() => handleStateButtonClick(state)}
+              color="primary"
+              variant={selectedState === state ? "contained" : "text"}
+            >
+              {state}
+            </Button>
+          ))}
+        </div>
       </div>
     </header>
   );
