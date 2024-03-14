@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { TextField, FormControl, InputLabel, Select, MenuItem, Chip, Button } from '@mui/material';
 import CategoryButtons from './Buttons';
 
-import image from './banner.png';
+
 
 const headerStyle = {
-  backgroundImage: `url(${image})`,
+  backgroundImage: `url('/icons/banner.png')`,
   backgroundSize: 'cover',
   backgroundPosition: 'center',
   width: '100%',

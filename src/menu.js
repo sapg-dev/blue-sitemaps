@@ -5,8 +5,8 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Box from '@mui/material/Box';
 import Menu from '@mui/material/Menu';
-import Logo from './euk.svg';
-import MicLogo from './mic.svg';
+
+
 
 function ResponsiveAppBar({ onCategoryChange }) {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
@@ -22,7 +22,7 @@ function ResponsiveAppBar({ onCategoryChange }) {
   return (
     <AppBar position="static" sx={{ backgroundColor: 'darkyellow' }}>
       <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
-        <img src={MicLogo} alt="Mic Logo" style={{ width: '5%' }} />
+      <img src="/icons/mic.svg" alt="Mic Logo" style={{ width: '5%' }} />
 
         <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' }, justifyContent: 'flex-end' }}>
           <IconButton
@@ -50,7 +50,7 @@ function ResponsiveAppBar({ onCategoryChange }) {
           {/* Menu items can go here if needed */}
         </Menu>
 
-        <img src={Logo} alt="euk Logo" style={{ width: '7%' }} />
+        <img src="/icons/euk.svg" alt="euk Logo" style={{ width: '7%' }} />
       </Toolbar>
     </AppBar>
   );
