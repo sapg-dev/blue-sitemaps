@@ -24,7 +24,7 @@ exports.handler = async (event, context) => {
       body: JSON.stringify(websites),
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': 'https://main--dynamic-llama-c5f80f.netlify.app/'
       }
     };
   } catch (error) {

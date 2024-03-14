@@ -3,7 +3,7 @@ const { ObjectId } = require('mongodb');
 
 exports.handler = async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
-  const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/";
+  const MONGO_URI = process.env.MONGO_URI;
 
   try {
     const client = new MongoClient(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -42,7 +42,8 @@ exports.handler = async (event, context) => {
       statusCode: 200,
       body: JSON.stringify(articles),
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': 'https://main--dynamic-llama-c5f80f.netlify.app/'
       }
     };
   } catch (error) {

@@ -2,7 +2,7 @@ const { MongoClient, ObjectId } = require('mongodb');
 
 exports.handler = async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
-  const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/";
+  const MONGO_URI = process.env.MONGO_URI;
 
   try {
     if (event.httpMethod !== 'PATCH') {
@@ -36,7 +36,7 @@ exports.handler = async (event, context) => {
       body: JSON.stringify(result),
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': 'https://main--dynamic-llama-c5f80f.netlify.app/'
       }
     };
   } catch (error) {
