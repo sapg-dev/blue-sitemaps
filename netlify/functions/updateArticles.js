@@ -2,7 +2,7 @@ const { MongoClient, ObjectId } = require('mongodb');
 
 exports.handler = async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
-  const MONGO_URI = "mongodb+srv://blue-sitemaps:tIRguvKmd8d7cDQa@blue.hgntyje.mongodb.net/?retryWrites=true&w=majority&appName=blue";
+  const MONGO_URI = "redacted";
 
   try {
     if (event.httpMethod !== 'PATCH') {
