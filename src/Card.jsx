@@ -28,7 +28,7 @@ const LinkCard = ({ title, content, link, website, date, type, id, daysAgo, stat
 
       
       try {
-        const response = await axios.patch(`/update-article/${articleId}`, { newState: actionType });
+        const response = await axios.patch(`/updateArticles/${articleId}`, { newState: actionType });
 
         console.log(response.data);
       } catch (error) {
