@@ -2,19 +2,19 @@
 	"siteId": "a8b7b59f-012b-48ed-982b-5c03298608cc",
 	"geolocation": {
 		"data": {
-			"city": "Geneva",
+			"city": "Zurich",
 			"country": {
 				"code": "CH",
 				"name": "Switzerland"
 			},
 			"subdivision": {
-				"code": "GE",
-				"name": "Geneva"
+				"code": "ZH",
+				"name": "Zurich"
 			},
 			"timezone": "Europe/Zurich",
-			"latitude": 46.2253,
-			"longitude": 6.1516
+			"latitude": 47.3682,
+			"longitude": 8.5671
 		},
-		"timestamp": 1710375145596
+		"timestamp": 1711553182781
 	}
 }

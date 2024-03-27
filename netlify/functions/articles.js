@@ -3,7 +3,7 @@ const { ObjectId } = require('mongodb');
 
 exports.handler = async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
-  const MONGO_URI = "redacted";
+  const MONGO_URI = process.env.MONGO_URI;
 
 
   try {

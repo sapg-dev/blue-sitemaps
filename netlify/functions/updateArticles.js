@@ -5,8 +5,15 @@ exports.handler = async (event, context) => {
   const MONGO_URI = "redacted";
 
   try {
-    if (event.httpMethod !== 'PATCH') {
-      return { statusCode: 405, body: 'Method Not Allowed' };
+    if (event.httpMethod === 'OPTIONS') {
+      return {
+        statusCode: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'PATCH, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      };
     }
 
     const data = JSON.parse(event.body);
