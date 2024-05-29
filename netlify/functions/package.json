@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "mongodb": "^6.5.0",
+    "dotenv": "^16.0.0" 
+  }
+}
